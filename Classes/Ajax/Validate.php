@@ -2,9 +2,11 @@
 
 namespace Typoheads\Formhandler\Ajax;
 
+use TYPO3\CMS\Core\Http\ServerRequest;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\PathUtility;
+use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
 use Typoheads\Formhandler\Component\Manager;
 use Typoheads\Formhandler\Utility\Globals;
 use Typoheads\Formhandler\View\AjaxValidation;
@@ -47,18 +49,21 @@ class Validate
     private $settings;
 
     /**
-     * @var int
-     */
-    private $id;
-
-    /**
      * Main method of the class.
      *
      * @return string The HTML list of remaining files to be displayed in the form
      */
-    public function main()
+    public function main(ServerRequest $request)
     {
-        $this->init();
+
+        $this->componentManager = GeneralUtility::makeInstance(Manager::class);
+        Globals::setAjaxMode(true);
+
+        /** @var TypoScriptFrontendController */
+        $controller = $request->getAttribute('frontend.controller');
+        $controller->getConfigArray($request);
+        $controller->newCObj();
+
         $field = htmlspecialchars(GeneralUtility::_GP('field'));
         if ($field) {
             $randomID = htmlspecialchars(GeneralUtility::_GP('randomID'));
@@ -101,23 +106,9 @@ class Validate
                 }
                 $content = sprintf($this->templates['spanError'], $content);
             }
-            print $content;
+            return $content;
         }
-    }
-
-    /**
-     * Initialize the class. Read GET parameters
-     */
-    protected function init()
-    {
-        if (isset($_GET['pid'])) {
-            $this->id = (int)($_GET['pid']);
-        } else {
-            $this->id = (int)($_GET['id']);
-        }
-        $this->componentManager = GeneralUtility::makeInstance(Manager::class);
-        Globals::setAjaxMode(true);
-        \Typoheads\Formhandler\Utility\GeneralUtility::initializeTSFE($this->id);
+        return '';
     }
 
     /**

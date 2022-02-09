@@ -3,9 +3,14 @@
 namespace Typoheads\Formhandler\AjaxHandler;
 
 use TYPO3\CMS\Core\Context\Context;
+use TYPO3\CMS\Core\Http\Request;
+use TYPO3\CMS\Core\Http\ServerRequest;
+use TYPO3\CMS\Core\Site\Entity\Site;
+use TYPO3\CMS\Core\Site\Entity\SiteLanguage;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Core\Utility\PathUtility;
+use Typoheads\Formhandler\Middleware\AjaxValidate;
 
 /*                                                                       *
 * This script is part of the TYPO3 project - inspiring people to share!  *
@@ -202,10 +207,18 @@ class JQuery extends AbstractAjaxHandler
      */
     protected function getJavascriptFormInit($formSelector, $submitButtonSelector, $isAjaxSubmit, $autoDisableSubmitButton, $validateFields)
     {
+        $request = $this->getRequest();
+        /** @var Site $site */
+        $site = $request->getAttribute('site');
+        /** @var SiteLanguage $siteLanguage */
+        $siteLanguage = $request->getAttribute('language');
+        $router = $site->getRouter();
+        $uri = $router->generateUri($GLOBALS['TSFE']->id, ['_language' => $siteLanguage,  AjaxValidate::NAMESPACE => 1]);
         return '(function( $ ) {
                     $(function() {
                         $("' . $formSelector . '").formhandler({
                             pageID: "' . $GLOBALS['TSFE']->id . '",
+                            url: "' . (string)$uri . '",
                             contentID: "' . $this->cObj->data['uid'] . '",
                             randomID: "' . $this->globals->getRandomID() . '",
                             formValuesPrefix: "' . $this->globals->getFormValuesPrefix() . '",
@@ -222,5 +235,10 @@ class JQuery extends AbstractAjaxHandler
                         });
                     });
                 }( jQuery ));';
+    }
+
+    protected function getRequest(): ServerRequest
+    {
+        return $GLOBALS['TYPO3_REQUEST'];
     }
 }

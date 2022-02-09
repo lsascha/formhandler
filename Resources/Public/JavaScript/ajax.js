@@ -4,6 +4,7 @@
 
         var defaults = {
             pageID: 0,
+            url: '',
             contentID: 0,
             randomID: 0,
             lang: 0,
@@ -30,8 +31,7 @@
                 var result = formhandlerDiv.find('#result_' + shortName);
                 loading.show();
                 result.hide();
-
-                var url = '/index.php?eID=formhandler&id=' + settings.pageID + '&field=' + shortName + '&randomID=' + settings.randomID + '&uid=' + settings.contentID + '&L=' + settings.lang;
+                var url = settings.url + '&field=' + shortName + '&randomID=' + settings.randomID + '&uid=' + settings.contentID + '&id=' + settings.pageID;
                 var postData = formhandlerDiv.find("form").serialize() + "&" + formhandlerDiv.find(settings.submitButtonSelector).attr("name") + "=submit";
                 formhandlerDiv.trigger('validateStart', [field]);
                 jQuery.ajax({
