@@ -52,23 +52,21 @@ class PrintToScreen extends AbstractDebugger
      */
     public function validateConfig()
     {
-        if (!$this->settings['sectionWrap']) {
+        if (!isset($this->settings['sectionWrap']) || !$this->settings['sectionWrap']) {
             $this->settings['sectionWrap'] = '<div style="border:1px solid #ccc; padding:7px; background:#dedede;">|</div>';
         }
-        if (!$this->settings['sectionHeaderWrap']) {
+        if (!isset($this->settings['sectionHeaderWrap']) || !$this->settings['sectionHeaderWrap']) {
             $this->settings['sectionHeaderWrap'] = '<h2 style="background:#333; color:#cdcdcd;height:23px;padding:10px 7px 7px 7px;margin:0;">|</h2>';
         }
-        if (!$this->settings['messageWrap']) {
+        if (!isset($this->settings['messageWrap']) || !$this->settings['messageWrap']) {
             $this->settings['messageWrap'] = '<div style="font-weight:bold;">|</div>';
         }
-        if (!$this->settings['severityWrap.']['1']) {
-            $this->settings['severityWrap.']['1'] = '<span style="color:#000;">|</span>';
-        }
-        if (!$this->settings['severityWrap.']['2']) {
-            $this->settings['severityWrap.']['2'] = '<span style="color:#FF8C00;">|</span>';
-        }
-        if (!$this->settings['severityWrap.']['3']) {
-            $this->settings['severityWrap.']['3'] = '<span style="color:#FF2800;">|</span>';
-        }
+
+        $this->settings['severityWrap'] = [
+            '1' => '<span style="color:#000;">|</span>',
+            '2' => '<span style="color:#FF8C00;">|</span>',
+            '3' => '<span style="color:#FF8C00;">|</span>'
+        ];
+
     }
 }

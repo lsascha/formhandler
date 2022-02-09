@@ -81,22 +81,22 @@ class Configuration implements \ArrayAccess
         }
     }
 
-    public function offsetGet($offset)
+    public function offsetGet($offset): mixed
     {
         return $this->setup['settings.'][$offset];
     }
 
-    public function offsetSet($offset, $value)
+    public function offsetSet($offset, $value): void
     {
         $this->setup['settings.'][$offset] = $value;
     }
 
-    public function offsetExists($offset)
+    public function offsetExists($offset): bool
     {
         return isset($this->setup['settings.'][$offset]);
     }
 
-    public function offsetUnset($offset)
+    public function offsetUnset($offset): void
     {
         $this->setup['settings.'][$offset] = null;
     }

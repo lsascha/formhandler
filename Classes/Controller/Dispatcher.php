@@ -80,7 +80,7 @@ class Dispatcher extends AbstractPlugin
 
             $this->globals->setCObj($this->cObj);
             $this->globals->getCObj()->setCurrentVal($predef);
-            if ($setup['usePredef']) {
+            if ($setup['usePredef'] ?? false) {
                 $predef = $this->utilityFuncs->getSingle($setup, 'usePredef');
             }
 
@@ -93,7 +93,7 @@ class Dispatcher extends AbstractPlugin
              * 2. TypoScript
              */
             $controller = '\Typoheads\Formhandler\Controller\Form';
-            if ($setup['controller']) {
+            if ($setup['controller'] ?? false) {
                 $controller = $setup['controller'];
             }
 
@@ -112,6 +112,7 @@ class Dispatcher extends AbstractPlugin
             if (strlen($predef) > 0) {
                 $controller->setPredefined($predef);
             }
+
 
             $result = $controller->process();
         } catch (\Exception $e) {

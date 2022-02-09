@@ -34,7 +34,7 @@ class Mail extends Form
     {
         $this->currentMailSettings = $errors;
         $content = '';
-        if ($this->subparts['template']) {
+        if (isset($this->subparts['template'])) {
             $this->settings = $this->globals->getSettings();
             $content = parent::render($gp, []);
         }
@@ -62,12 +62,12 @@ class Mail extends Form
     protected function fillValueMarkers()
     {
         $componentSettings = $this->getComponentSettings();
-        if ($componentSettings[$this->currentMailSettings['mode']][$this->currentMailSettings['suffix'] . '.']['arrayValueSeparator']) {
+        if (isset($componentSettings[$this->currentMailSettings['mode']][$this->currentMailSettings['suffix'] . '.']['arrayValueSeparator'])) {
             $this->settings['arrayValueSeparator'] = $componentSettings[$this->currentMailSettings['mode']][$this->currentMailSettings['suffix'] . '.']['arrayValueSeparator'];
             $this->settings['arrayValueSeparator.'] = $componentSettings[$this->currentMailSettings['mode']][$this->currentMailSettings['suffix'] . '.']['arrayValueSeparator.'];
         }
         $this->disableEncodingFields = [];
-        if ($this->settings['disableEncodingFields']) {
+        if (isset($this->settings['disableEncodingFields'])) {
             $this->disableEncodingFields = explode(',', $this->utilityFuncs->getSingle($this->settings, 'disableEncodingFields'));
         }
 
@@ -101,7 +101,7 @@ class Mail extends Form
     protected function sanitizeMarkers($markers)
     {
         $componentSettings = $this->getComponentSettings();
-        $checkBinaryCrLf = $componentSettings['checkBinaryCrLf'];
+        $checkBinaryCrLf = $componentSettings['checkBinaryCrLf'] ?? '';
         if (strlen($checkBinaryCrLf) > 0) {
             $paramsToCheck = GeneralUtility::trimExplode(',', $checkBinaryCrLf);
             foreach ($markers as $markerName => &$value) {

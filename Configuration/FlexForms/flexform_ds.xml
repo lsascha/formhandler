@@ -21,7 +21,6 @@
                             <config>
                                 <type>group</type>
                                 <internal_type>folder</internal_type>
-                                <allowed>tmpl,html,htm</allowed>
                                 <max_size>500</max_size>
                                 <minitems>0</minitems>
                                 <maxitems>1</maxitems>
@@ -38,7 +37,6 @@
                             <config>
                                 <type>group</type>
                                 <internal_type>folder</internal_type>
-                                <allowed>php,xml</allowed>
                                 <max_size>500</max_size>
                                 <minitems>0</minitems>
                                 <maxitems>1</maxitems>
@@ -64,8 +62,12 @@
                     <predefinedJS>
                         <TCEforms>
                             <config>
-                                <type>user</type>
+                                <type>select</type>
+                                <renderType>selectSingle</renderType>
                                 <userFunc>Typoheads\Formhandler\Utility\TcaUtility->addFields_predefinedJS</userFunc>
+                                <maxitems>1</maxitems>
+                                <size>1</size>
+                                <multiple>0</multiple>
                             </config>
                         </TCEforms>
                     </predefinedJS>

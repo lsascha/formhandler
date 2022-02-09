@@ -57,24 +57,24 @@ class JQuery extends AbstractAjaxHandler
             'valid' => 'form-valid',
             'invalid' => 'form-invalid',
         ];
-        if (is_array($this->settings['validationStatusClasses.'])) {
-            if ($this->settings['validationStatusClasses.']['base']) {
+        if (isset($this->settings['validationStatusClasses.']) && is_array($this->settings['validationStatusClasses.'])) {
+            if ($this->settings['validationStatusClasses.']['base'] ?? false) {
                 $this->validationStatusClasses['base'] = $this->utilityFuncs->getSingle($this->settings['validationStatusClasses.'], 'base');
             }
-            if ($this->settings['validationStatusClasses.']['valid']) {
+            if ($this->settings['validationStatusClasses.']['valid'] ?? false) {
                 $this->validationStatusClasses['valid'] = $this->utilityFuncs->getSingle($this->settings['validationStatusClasses.'], 'valid');
             }
-            if ($this->settings['validationStatusClasses.']['invalid']) {
+            if ($this->settings['validationStatusClasses.']['invalid'] ?? false) {
                 $this->validationStatusClasses['invalid'] = $this->utilityFuncs->getSingle($this->settings['validationStatusClasses.'], 'invalid');
             }
         }
 
         $autoDisableSubmitButton = $this->utilityFuncs->getSingle($this->settings, 'autoDisableSubmitButton');
 
-        $this->jsPosition = trim($this->utilityFuncs->getSingle($this->settings, 'jsPosition'));
+        $this->jsPosition = trim((string)$this->utilityFuncs->getSingle($this->settings, 'jsPosition'));
         $isAjaxSubmit = (int)($this->utilityFuncs->getSingle($this->settings, 'ajaxSubmit'));
 
-        $submitButtonSelector = $this->utilityFuncs->getSingle($this->settings, 'submitButtonSelector');
+        $submitButtonSelector = (string)$this->utilityFuncs->getSingle($this->settings, 'submitButtonSelector');
         if (strlen(trim($submitButtonSelector)) === 0) {
             $submitButtonSelector = 'INPUT[type=\'submit\']';
         }
@@ -82,9 +82,9 @@ class JQuery extends AbstractAjaxHandler
 
         $globalSettings = $this->globals->getSession()->get('settings');
         $validateFields = [];
-        if (is_array($globalSettings['validators.']) && (int)($this->utilityFuncs->getSingle($globalSettings['validators.'], 'disable')) !== 1) {
+        if (isset($globalSettings['validators.']) && is_array($globalSettings['validators.']) && (int)($this->utilityFuncs->getSingle($globalSettings['validators.'], 'disable')) !== 1) {
             foreach ($globalSettings['validators.'] as $key => $validatorSettings) {
-                if (is_array($validatorSettings['config.']['fieldConf.']) && (int)($this->utilityFuncs->getSingle($validatorSettings['config.'], 'disable')) !== 1) {
+                if (isset($validatorSettings['config.']) && isset($validatorSettings['config.']['fieldConf.']) && is_array($validatorSettings['config.']['fieldConf.']) && (int)($this->utilityFuncs->getSingle($validatorSettings['config.'], 'disable')) !== 1) {
                     foreach ($validatorSettings['config.']['fieldConf.'] as $fieldName => $fieldSettings) {
                         $replacedFieldName = str_replace('.', '', $fieldName);
                         $fieldName = $replacedFieldName;
@@ -121,7 +121,7 @@ class JQuery extends AbstractAjaxHandler
         $settings = $this->globals->getSession()->get('settings');
         $ajaxSubmit = $this->utilityFuncs->getSingle($settings['ajax.']['config.'], 'ajaxSubmit');
         if ((int)$ajaxSubmit === 1) {
-            $ajaxSubmitLoader = $this->utilityFuncs->getSingle($settings['ajax.']['config.'], 'ajaxSubmitLoader');
+            $ajaxSubmitLoader = (string)$this->utilityFuncs->getSingle($settings['ajax.']['config.'], 'ajaxSubmitLoader');
             if (strlen($ajaxSubmitLoader) === 0) {
                 $loadingImg =PathUtility::getAbsoluteWebPath(ExtensionManagementUtility::extPath('formhandler')) . 'Resources/Public/Images/ajax-loader.gif';
                 $loadingImg = '<img src="' . $loadingImg . '" alt="loading" />';
@@ -136,16 +136,16 @@ class JQuery extends AbstractAjaxHandler
             $markers['###validation-status###'] = $this->validationStatusClasses['base'] . ' ' . $this->validationStatusClasses['invalid'];
         }
 
-        $initial = $this->utilityFuncs->getSingle($settings['ajax.']['config.'], 'initial');
+        $initial = $this->utilityFuncs->getSingle($settings['ajax.']['config.'], 'initial') ?? '';
 
-        $loadingImg = $this->utilityFuncs->getSingle($settings['ajax.']['config.'], 'loading');
+        $loadingImg = (string)$this->utilityFuncs->getSingle($settings['ajax.']['config.'], 'loading');
         if (strlen($loadingImg) === 0) {
             $loadingImg =PathUtility::getAbsoluteWebPath(ExtensionManagementUtility::extPath('formhandler')) . 'Resources/Public/Images/ajax-loader.gif';
             $loadingImg = str_replace('../', '', $loadingImg);
             $loadingImg = '<img src="' . $loadingImg . '" alt="loading" />';
         }
 
-        if (is_array($settings['validators.']) && (int)($this->utilityFuncs->getSingle($settings['validators.'], 'disable')) !== 1) {
+        if (isset($settings['validators.']) && (int)($this->utilityFuncs->getSingle($settings['validators.'], 'disable')) !== 1) {
             foreach ($settings['validators.'] as $key => $validatorSettings) {
                 if (is_array($validatorSettings['config.']['fieldConf.']) && (int)($this->utilityFuncs->getSingle($validatorSettings['config.'], 'disable')) !== 1) {
                     foreach ($validatorSettings['config.']['fieldConf.'] as $fieldname => $fieldSettings) {
@@ -182,13 +182,13 @@ class JQuery extends AbstractAjaxHandler
         if ($this->jsPosition === 'inline') {
             $GLOBALS['TSFE']->content .= $js;
         } elseif ($this->jsPosition === 'footer') {
-            if ($doAppend) {
+            if ($doAppend && isset($GLOBALS['TSFE']->additionalFooterData['Tx_Formhandler_AjaxHandler_Jquery_' . $key])) {
                 $GLOBALS['TSFE']->additionalFooterData['Tx_Formhandler_AjaxHandler_Jquery_' . $key] .= $js;
             } else {
                 $GLOBALS['TSFE']->additionalFooterData['Tx_Formhandler_AjaxHandler_Jquery_' . $key] = $js;
             }
         } else {
-            if ($doAppend) {
+            if ($doAppend && isset($GLOBALS['TSFE']->additionalHeaderData['Tx_Formhandler_AjaxHandler_Jquery_' . $key])) {
                 $GLOBALS['TSFE']->additionalHeaderData['Tx_Formhandler_AjaxHandler_Jquery_' . $key] .= $js;
             } else {
                 $GLOBALS['TSFE']->additionalHeaderData['Tx_Formhandler_AjaxHandler_Jquery_' . $key] = $js;

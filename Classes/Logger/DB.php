@@ -50,7 +50,7 @@ class DB extends AbstractLogger
 
         $logParams = $this->gp;
 
-        if ($this->settings['fields.']) {
+        if (isset($this->settings['fields.'])) {
             foreach ($this->settings['fields.'] as $field => $fieldConf) {
                 $field = str_replace('.', '', $field);
                 if ($fieldConf['ifIsEmpty'] && (empty($logParams[$field]) || !isset($logParams[$field]))) {
@@ -62,7 +62,7 @@ class DB extends AbstractLogger
                 }
             }
         }
-        if ($this->settings['excludeFields']) {
+        if (isset($this->settings['excludeFields'])) {
             $excludeFields = $this->utilityFuncs->getSingle($this->settings, 'excludeFields');
             $excludeFields = GeneralUtility::trimExplode(',', $excludeFields);
             foreach ($excludeFields as $excludeField) {
@@ -70,7 +70,7 @@ class DB extends AbstractLogger
             }
         }
 
-        if ($this->settings['fieldOrder']) {
+        if (isset($this->settings['fieldOrder'])) {
             $fieldOrder = $this->utilityFuncs->getSingle($this->settings, 'fieldOrder');
             $fieldOrder = GeneralUtility::trimExplode(',', $fieldOrder);
             $orderedFields = $this->parseFieldOrder($fieldOrder);
@@ -83,7 +83,7 @@ class DB extends AbstractLogger
         $fields['key_hash'] = $hash;
         $fields['unique_hash'] = $uniqueHash;
 
-        if ((int)($this->settings['markAsSpam']) === 1) {
+        if (isset($this->settings['markAsSpam']) && (int)($this->settings['markAsSpam']) === 1) {
             $fields['is_spam'] = 1;
         }
 

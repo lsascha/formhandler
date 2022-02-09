@@ -32,8 +32,12 @@ class RemoveXSS extends AbstractInterceptor
         $this->removeChars = [];
 
         //search for a global setting for character removal
-        $globalSetting = $this->settings['fieldConf.']['global.'];
-        if ($globalSetting['removeChars']) {
+        if (isset($this->settings['fieldConf.']) && isset($this->settings['fieldConf.']['global.'])) {
+            $globalSetting = $this->settings['fieldConf.']['global.'];
+        } else {
+            $globalSetting = [];
+        }
+        if (isset($globalSetting['removeChars'])) {
             $sep = ',';
 
             //user set custom rules via cObject
@@ -51,7 +55,7 @@ class RemoveXSS extends AbstractInterceptor
                 $list = $globalSetting['removeChars'];
             }
             $this->removeChars = GeneralUtility::trimExplode($sep, $list);
-        } elseif ((int)($this->utilityFuncs->getSingle($globalSetting['removeChars.'], 'disable')) === 1) {
+        } elseif ((int)($this->utilityFuncs->getSingle($globalSetting['removeChars.'] ?? null, 'disable')) === 1) {
 
             //user disabled removal globally
             $this->removeChars = [];
@@ -79,26 +83,29 @@ class RemoveXSS extends AbstractInterceptor
                 $removeChars = $this->removeChars;
 
                 //search for a specific setting for this field
-                $fieldSetting = $this->settings['fieldConf.'][$key . '.'];
-                if ($fieldSetting['removeChars']) {
+                $fieldConfig = [];
+                if (isset($this->settings['fieldConf.']) && isset($this->settings['fieldConf.'][$key . '.'])) {
+                    $fieldSetting = $this->settings['fieldConf.'][$key . '.'];
+                }
+                if (isset($fieldSetting['removeChars'])) {
                     $sep = ',';
 
                     //user set custom rules via cObject
-                    $cObjSettings = $fieldSetting['removeChars.'];
+                    $cObjSettings = $fieldSetting['removeChars.'] ?? null;
                     if (is_array($cObjSettings)) {
                         $list = $this->utilityFuncs->getSingle($fieldSetting, 'removeChars');
 
                         //user set custom separator
-                        if ($fieldSetting['separator']) {
+                        if (isset($fieldSetting['separator'])) {
                             $sep = $this->utilityFuncs->getSingle($fieldSetting, 'separator');
                         }
                     } else {
 
                         //user entered a comma seperated list
-                        $list = $fieldSetting['removeChars'];
+                        $list = $fieldSetting['removeChars'] ?? null;
                     }
                     $removeChars = GeneralUtility::trimExplode($sep, $list);
-                } elseif ((int)($this->utilityFuncs->getSingle($fieldSetting['removeChars.'], 'disable')) === 1) {
+                } elseif ((int)($this->utilityFuncs->getSingle($fieldSetting['removeChars.'] ?? null, 'disable')) === 1) {
 
                     //user disabled removal for this field
                     $removeChars = [];
@@ -176,7 +183,7 @@ class RemoveXSS extends AbstractInterceptor
     {
         parent::init($gp, $settings);
         $this->doNotSanitizeFields = [];
-        if ($this->settings['doNotSanitizeFields']) {
+        if (isset($this->settings['doNotSanitizeFields'])) {
             $this->doNotSanitizeFields = GeneralUtility::trimExplode(',', $this->utilityFuncs->getSingle($this->settings, 'doNotSanitizeFields'));
         }
     }

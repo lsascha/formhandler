@@ -156,7 +156,7 @@ class TcaUtility
                     $langFileAndKey = implode(':', $data);
                     $beName = $GLOBALS['LANG']->sL('LLL:' . $langFileAndKey);
                 }
-                if (!$predef[$key]) {
+                if (!isset($predef[$key])) {
                     $predef[$key] = $beName;
                 }
             }

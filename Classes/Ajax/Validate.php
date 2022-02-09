@@ -71,7 +71,7 @@ class Validate
             Globals::setRandomID($randomID);
             if (!Globals::getSession()) {
                 $ts = $GLOBALS['TSFE']->tmpl->setup['plugin.']['Tx_Formhandler.']['settings.'];
-                $sessionClass = \Typoheads\Formhandler\Utility\GeneralUtility::getPreparedClassName($ts['session.'], 'Session\PHP');
+                $sessionClass = \Typoheads\Formhandler\Utility\GeneralUtility::getPreparedClassName($ts['session.'] ?? null, 'Session\PHP');
                 Globals::setSession($this->componentManager->getComponent($sessionClass));
             }
             $this->settings = Globals::getSession()->get('settings');
@@ -82,12 +82,12 @@ class Validate
             $valid = $validator->validateAjax($field, $gp, $errors);
 
             if ($valid) {
-                $content = \Typoheads\Formhandler\Utility\GeneralUtility::getSingle($this->settings['ajax.']['config.'], 'ok');
+                $content = \Typoheads\Formhandler\Utility\GeneralUtility::getSingle($this->settings['ajax.']['config.'] ?? null, 'ok');
                 if (strlen($content) === 0) {
                     $content = '<img src="' . PathUtility::getAbsoluteWebPath(ExtensionManagementUtility::extPath('formhandler')) . 'Resources/Public/Images/ok.png' . '" />';
                 } else {
                     $gp = [
-                        $_GET['field'] => $_GET['value'],
+                        $_GET['field'] => $_GET['value'] ?? null,
                     ];
                     $view = $this->initView($content);
                     $content = $view->render($gp, $errors);
@@ -100,7 +100,7 @@ class Validate
                 } else {
                     $view = $this->initView($content);
                     $gp = [
-                        $_GET['field'] => $_GET['value'],
+                        $_GET['field'] => $_GET['value'] ?? null,
                     ];
                     $content = $view->render($gp, $errors);
                 }

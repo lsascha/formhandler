@@ -90,16 +90,16 @@ class Mail extends AbstractFinisher
     {
         //init mailer object
         $globalSettings = $this->globals->getSettings();
-        if (is_array($this->settings['mailer.'])) {
+        if (is_array($this->settings['mailer.'] ?? null)) {
             $emailClass = $this->utilityFuncs->getPreparedClassName($this->settings['mailer.'], 'Mailer\TYPO3Mailer');
-        } elseif (is_array($globalSettings['mailer.'])) {
+        } elseif (is_array($globalSettings['mailer.'] ?? null)) {
             $emailClass = $this->utilityFuncs->getPreparedClassName($globalSettings['mailer.'], 'Mailer\TYPO3Mailer');
         } else {
             $emailClass = $this->utilityFuncs->prepareClassName('\\Typoheads\\Formhandler\\Mailer\\TYPO3Mailer');
         }
 
         $this->emailObj = $this->componentManager->getComponent($emailClass);
-        $this->emailObj->init($this->gp, $this->settings['mailer.']['config.']);
+        $this->emailObj->init($this->gp, $this->settings['mailer.']['config.'] ?? null);
 
         $this->settings = $this->parseEmailSettings($this->settings, $type);
 
@@ -137,13 +137,13 @@ class Mail extends AbstractFinisher
         $view = $this->componentManager->getComponent($viewClass);
 
         $view->setLangFiles($this->globals->getLangFiles());
-        $view->setPredefined($this->predefined);
+        $view->setPredefined($this->predefined ?? null);
         $view->setComponentSettings($this->settings);
         $templateCode = $this->globals->getTemplateCode();
-        if ($this->settings['templateFile']) {
+        if (isset($this->settings['templateFile'])) {
             $templateCode = $this->utilityFuncs->readTemplateFile(false, $this->settings);
         }
-        if ($this->settings[$mode]['templateFile']) {
+        if (isset($this->settings[$mode]['templateFile'])) {
             $templateCode = $this->utilityFuncs->readTemplateFile(false, $this->settings[$mode]);
         }
 
@@ -165,54 +165,54 @@ class Mail extends AbstractFinisher
      */
     protected function sendMail($type)
     {
-        $doSend = true;
         if ((int)($this->utilityFuncs->getSingle($this->settings[$type], 'disable')) === 1) {
             $this->utilityFuncs->debugMessage('mail_disabled', [$type]);
-            $doSend = false;
+            return;
         }
 
         $mailSettings = $this->settings[$type];
-        $plain = $this->parseTemplate($type, 'plain');
+
+        $plain = (string)$this->parseTemplate($type, 'plain');
         if (strlen(trim($plain)) > 0) {
             $template['plain'] = $plain;
         }
-        $html = $this->parseTemplate($type, 'html');
+        $html = (string)$this->parseTemplate($type, 'html');
         if (strlen(trim($html)) > 0) {
             $template['html'] = $html;
         }
 
         //set e-mail options
-        $this->emailObj->setSubject($mailSettings['subject']);
+        $this->emailObj->setSubject((string)$mailSettings['subject']);
 
-        $sender = $mailSettings['sender_email'];
+        $sender = $mailSettings['sender_email'] ?? null;
         if (isset($mailSettings['sender_email']) && is_array($mailSettings['sender_email'])) {
             $sender = implode(',', $mailSettings['sender_email']);
         }
 
-        $senderName = $mailSettings['sender_name'];
+        $senderName = $mailSettings['sender_name'] ?? null;
         if (isset($mailSettings['sender_name']) && is_array($mailSettings['sender_name'])) {
             $senderName = implode(',', $mailSettings['sender_name']);
         }
 
         $this->emailObj->setSender($sender, $senderName);
 
-        $replyto = $mailSettings['replyto_email'];
+        $replyto = $mailSettings['replyto_email'] ?? null;
         if (isset($mailSettings['replyto_email']) && is_array($mailSettings['replyto_email'])) {
             $replyto = implode(',', $mailSettings['replyto_email']);
         }
 
-        $replytoName = $mailSettings['replyto_name'];
+        $replytoName = $mailSettings['replyto_name'] ?? null;
         if (isset($mailSettings['replyto_name']) && is_array($mailSettings['replyto_name'])) {
             $replytoName = implode(',', $mailSettings['replyto_name']);
         }
         $this->emailObj->setReplyTo($replyto, $replytoName);
 
-        $cc = $mailSettings['cc_email'];
+        $cc = $mailSettings['cc_email'] ?? '';
         if (!is_array($cc)) {
             $cc = GeneralUtility::trimExplode(',', $cc);
         }
 
-        $ccName = $mailSettings['cc_name'];
+        $ccName = $mailSettings['cc_name'] ?? '';
         if (!is_array($ccName)) {
             $ccName = GeneralUtility::trimExplode(',', $ccName);
         }
@@ -226,12 +226,12 @@ class Mail extends AbstractFinisher
             }
         }
 
-        $bcc = $mailSettings['bcc_email'];
+        $bcc = $mailSettings['bcc_email'] ?? '';
         if (!is_array($bcc)) {
             $bcc = GeneralUtility::trimExplode(',', $bcc);
         }
 
-        $bccName = $mailSettings['bcc_name'];
+        $bccName = $mailSettings['bcc_name'] ?? '';
         if (!is_array($bccName)) {
             $bccName = GeneralUtility::trimExplode(',', $bccName);
         }
@@ -245,28 +245,29 @@ class Mail extends AbstractFinisher
             }
         }
 
-        $returnPath = $mailSettings['return_path'];
+        $returnPath = $mailSettings['return_path'] ?? '';
         if (isset($mailSettings['return_path']) && is_array($mailSettings['return_path'])) {
             $returnPath = implode(',', $mailSettings['return_path']);
         }
         if (strlen(trim($returnPath)) === 0) {
-            $returnPath = $GLOBALS['TYPO3_CONF_VARS']['MAIL']['defaultMailFromAddress'];
+            $returnPath = $sender;
+            //$returnPath = $GLOBALS['TYPO3_CONF_VARS']['MAIL']['defaultMailFromAddress'];
         }
 
         $this->emailObj->setReturnPath($returnPath);
 
-        if ($mailSettings['email_header']) {
+        if (isset($mailSettings['email_header'])) {
             $this->emailObj->addHeader($mailSettings['header']);
         }
 
-        if (strlen(trim($template['plain'])) > 0) {
+        if (strlen(trim($template['plain'] ?? '')) > 0) {
             $this->emailObj->setPlain($template['plain']);
         } else {
             $this->emailObj->setPlain(null);
         }
 
-        if (strlen(trim($template['html'])) > 0) {
-            if ($mailSettings['htmlEmailAsAttachment']) {
+        if (strlen(trim($template['html'] ?? '')) > 0) {
+            if (isset($mailSettings['htmlEmailAsAttachment'])) {
                 $prefix = 'formhandler_';
                 if (isset($mailSettings['filePrefix.']['html'])) {
                     $prefix = $mailSettings['filePrefix.']['html'];
@@ -287,17 +288,17 @@ class Mail extends AbstractFinisher
             }
         }
 
-        if (!is_array($mailSettings['attachment'])) {
+        if (!is_array($mailSettings['attachment'] ?? null)) {
             $mailSettings['attachment'] = GeneralUtility::trimExplode(',', $mailSettings['attachment']);
         }
-        foreach ($mailSettings['attachment'] as $idx => $attachment) {
+        foreach ($mailSettings['attachment'] ?? [] as $idx => $attachment) {
             if (strlen($attachment) > 0 && @file_exists($attachment)) {
                 $this->emailObj->addAttachment($attachment);
             } else {
                 $this->utilityFuncs->debugMessage('attachment_not_found', [$attachment], 2);
             }
         }
-        if ($mailSettings['attachGeneratedFiles']) {
+        if (isset($mailSettings['attachGeneratedFiles'])) {
             $files = GeneralUtility::trimExplode(',', $mailSettings['attachGeneratedFiles']);
             $this->utilityFuncs->debugMessage('adding_generated_files', [], 1, $files);
             foreach ($files as $file) {
@@ -310,13 +311,13 @@ class Mail extends AbstractFinisher
         if (!$max) {
             $max = 2;
         }
-        if (!is_array($mailSettings['to_email'])) {
+        if (!is_array($mailSettings['to_email'] ?? null)) {
             $mailSettings['to_email'] = GeneralUtility::trimExplode(',', $mailSettings['to_email']);
         }
         reset($mailSettings['to_email']);
 
         //send e-mails
-        $recipients = $mailSettings['to_email'];
+        $recipients = $mailSettings['to_email'] ?? [];
         foreach ($recipients as $key => $recipient) {
             if (strpos($recipient, '@') === false || strpos($recipient, '@') === 0 || strlen(trim($recipient)) === 0) {
                 unset($recipients[$key]);
@@ -326,7 +327,7 @@ class Mail extends AbstractFinisher
             $recipients = array_slice($recipients, 0, $max);
         }
         $sent = false;
-        if ($doSend && !empty($recipients)) {
+        if (!empty($recipients)) {
             $sent = $this->emailObj->send($recipients);
         }
         if ($sent) {
@@ -335,12 +336,12 @@ class Mail extends AbstractFinisher
             $this->utilityFuncs->debugMessage('mail_not_sent', [implode(',', $recipients)], 2);
         }
         $this->utilityFuncs->debugMailContent($this->emailObj);
-        if ($tmphtml) {
+        if (isset($tmphtml)) {
             unlink($tmphtml);
         }
 
         // delete generated files
-        if ($mailSettings['deleteGeneratedFiles'] && $mailSettings['attachGeneratedFiles']) {
+        if (isset($mailSettings['deleteGeneratedFiles']) && isset($mailSettings['attachGeneratedFiles'])) {
             $files = GeneralUtility::trimExplode(',', $mailSettings['attachGeneratedFiles']);
             foreach ($files as $file) {
                 unlink($file);
@@ -406,7 +407,7 @@ class Mail extends AbstractFinisher
             $settings[$key . '.']['gp'] = $this->gp;
             $parsed = $this->utilityFuncs->getSingle($settings, $key);
         } else {
-            $parsed = $this->parseSettingValue($settings[$key]);
+            $parsed = $this->parseSettingValue($settings[$key] ?? '');
         }
         return $parsed;
     }
@@ -427,7 +428,7 @@ class Mail extends AbstractFinisher
         } elseif (isset($settings[$key . '.']) && is_array($settings[$key . '.'])) {
             $parsed = $parsed = $this->explodeList($this->utilityFuncs->getSingle($settings, $key));
         } else {
-            $parsed = $this->explodeList($settings[$key]);
+            $parsed = $this->explodeList($settings[$key] ?? '');
         }
         return $parsed;
     }
@@ -446,7 +447,7 @@ class Mail extends AbstractFinisher
         if (isset($settings[$key . '.']) && is_array($settings[$key . '.'])) {
             $files = $this->utilityFuncs->getSingle($settings, $key);
             $files = GeneralUtility::trimExplode(',', $files);
-        } elseif ($settings[$key]) {
+        } elseif (isset($settings[$key])) {
             $files = GeneralUtility::trimExplode(',', $settings[$key]);
         }
         $parsed = [];
@@ -587,7 +588,7 @@ class Mail extends AbstractFinisher
         $section = 'sEMAIL' . $typeUpper;
         $emailSettings = $currentSettings;
         foreach ($optionsToParse as $idx => $option) {
-            $value = $this->utilityFuncs->pi_getFFvalue($this->cObj->data['pi_flexform'], $option, $section);
+            $value = (string)$this->utilityFuncs->pi_getFFvalue($this->cObj->data['pi_flexform'], $option, $section);
             if (strlen($value) > 0) {
                 $emailSettings[$option] = $value;
                 if (isset($this->gp[$value])) {
@@ -639,27 +640,27 @@ class Mail extends AbstractFinisher
                             }
                             unset($currentSettings['attachGeneratedFiles.']);
                             $currentSettings['attachGeneratedFiles'] = $emailSettings['attachGeneratedFiles'];
-                        } elseif ($currentSettings['attachGeneratedFiles']) {
+                        } elseif (isset($currentSettings['attachGeneratedFiles'])) {
                             $emailSettings['attachGeneratedFiles'] = $currentSettings['attachGeneratedFiles'];
                         }
                         break;
 
                     case 'htmlEmailAsAttachment':
-                        $htmlEmailAsAttachment = $this->utilityFuncs->getSingle($currentSettings, 'htmlEmailAsAttachment');
+                        $htmlEmailAsAttachment = (string)$this->utilityFuncs->getSingle($currentSettings, 'htmlEmailAsAttachment');
                         if ((int)$htmlEmailAsAttachment === 1) {
                             $emailSettings['htmlEmailAsAttachment'] = 1;
                         }
 
                         break;
                     case 'deleteGeneratedFiles':
-                        $htmlEmailAsAttachment = $this->utilityFuncs->getSingle($currentSettings, 'deleteGeneratedFiles');
+                        $htmlEmailAsAttachment = (string)$this->utilityFuncs->getSingle($currentSettings, 'deleteGeneratedFiles');
                         if ((int)$htmlEmailAsAttachment === 1) {
                             $emailSettings['deleteGeneratedFiles'] = 1;
                         }
 
                         break;
                     case 'filePrefix':
-                        $filePrefix = $this->utilityFuncs->getSingle($currentSettings, 'filePrefix');
+                        $filePrefix = (string)$this->utilityFuncs->getSingle($currentSettings, 'filePrefix');
                         if (strlen($filePrefix) > 0) {
                             $emailSettings['filePrefix'] = $filePrefix;
                         }

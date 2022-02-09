@@ -113,7 +113,7 @@ class DefaultValidator extends AbstractValidator
             $errors = $this->validateRecursive($errors, $this->gp, (array)$this->settings['fieldConf.']);
         }
 
-        if ($this->settings['messageLimit'] > 0 || is_array($this->settings['messageLimit.'])) {
+        if ($this->settings['messageLimit'] ?? 0 > 0 || is_array($this->settings['messageLimit.'] ?? null)) {
             $limit = (int)$this->settings['messageLimit'];
             $limits = (array)$this->settings['messageLimit.'];
 
@@ -205,10 +205,10 @@ class DefaultValidator extends AbstractValidator
             }
 
             //set other errorChecks
-            foreach ($fieldSettings['errorCheck.'] as $checkKey => $check) {
+            foreach ($fieldSettings['errorCheck.'] ?? [] as $checkKey => $check) {
                 if (!strstr($checkKey, '.') && strlen(trim($check)) > 0) {
                     $errorChecks[$counter]['check'] = $check;
-                    if (is_array($fieldSettings['errorCheck.'][$checkKey . '.'])) {
+                    if (is_array($fieldSettings['errorCheck.'][$checkKey . '.'] ?? null)) {
                         $errorChecks[$counter]['params'] = $fieldSettings['errorCheck.'][$checkKey . '.'];
                     }
                     $counter++;
@@ -247,7 +247,7 @@ class DefaultValidator extends AbstractValidator
                     if ($errorCheckObject->validateConfig()) {
                         $checkFailed = $errorCheckObject->check();
                         if (strlen($checkFailed) > 0) {
-                            if (!is_array($errors[$errorFieldName])) {
+                            if (!is_array($errors[$errorFieldName] ?? null)) {
                                 $errors[$errorFieldName] = [];
                             }
                             $errors[$errorFieldName][] = $checkFailed;
@@ -265,7 +265,7 @@ class DefaultValidator extends AbstractValidator
 
     public function validateConfig()
     {
-        if (is_array($this->settings['fieldConf.'])) {
+        if (is_array($this->settings['fieldConf.'] ?? null)) {
             $fieldConf = $this->settings['fieldConf.'];
             foreach ($fieldConf as $key => $fieldSettings) {
                 $fieldName = trim($key, '.');

@@ -46,7 +46,7 @@ class GeneralUtility implements SingletonInterface
         $gp = array_merge(\TYPO3\CMS\Core\Utility\GeneralUtility::_GET(), \TYPO3\CMS\Core\Utility\GeneralUtility::_POST());
         $prefix = Globals::getFormValuesPrefix();
         if ($prefix) {
-            if (is_array($gp[$prefix])) {
+            if (isset($gp[$prefix]) && is_array($gp[$prefix])) {
                 $gp = $gp[$prefix];
             } else {
                 $gp = [];
@@ -258,7 +258,10 @@ class GeneralUtility implements SingletonInterface
         if (!is_array($arr)) {
             return $arr;
         }
-        if (!is_array($arr[$key . '.'])) {
+        if (!isset($arr[$key])) {
+            return null;
+        }
+        if (!isset($arr[$key . '.'])) {
             return $arr[$key];
         }
         if (!isset($arr[$key . '.']['sanitize'])) {
@@ -370,7 +373,7 @@ class GeneralUtility implements SingletonInterface
                     $additionalParams[$key] = $value;
                 }
             } else {
-                $additionalParams = $settings['additionalParams.'];
+                $additionalParams = $settings['additionalParams.'] ?? [];
             }
             self::doRedirect($redirectPage, $correctRedirectUrl, $additionalParams, $headerStatusCode);
             exit();
@@ -426,10 +429,10 @@ class GeneralUtility implements SingletonInterface
                     }
                 }
             } else {
-                $tempArr = $tempArr[$v];
+                $tempArr = $tempArr[$v] ?? null;
             }
         }
-        return $tempArr[$value];
+        return $tempArr[$value] ?? null;
     }
 
     /**
@@ -599,7 +602,6 @@ class GeneralUtility implements SingletonInterface
 
         self::debugMessage('mail_cc', [], 1, (array)$emailObj->getCc());
         self::debugMessage('mail_bcc', [], 1, (array)$emailObj->getBcc());
-        self::debugMessage('mail_returnpath', [], 1, [$emailObj->returnPath]);
         self::debugMessage('mail_plain', [], 1, [$emailObj->getPlain()]);
         self::debugMessage('mail_html', [], 1, [$emailObj->getHTML()]);
     }
@@ -712,11 +714,11 @@ class GeneralUtility implements SingletonInterface
 
         //if temp upload folder set in TypoScript, take that setting
         $settings = Globals::getSession()->get('settings');
-        if (strlen($fieldName) > 0 && $settings['files.']['uploadFolder.'][$fieldName]) {
+        if (strlen($fieldName) > 0 && isset($settings['files.']['uploadFolder.']) && isset($settings['files.']['uploadFolder.'][$fieldName])) {
             $uploadFolder = self::getSingle($settings['files.']['uploadFolder.'], $fieldName);
-        } elseif ($settings['files.']['uploadFolder.']['default']) {
+        } elseif (isset($settings['files.']['uploadFolder.']) && isset($settings['files.']['uploadFolder.']['default'])) {
             $uploadFolder = self::getSingle($settings['files.']['uploadFolder.'], 'default');
-        } elseif ($settings['files.']['uploadFolder']) {
+        } elseif (isset($settings['files.']['uploadFolder'])) {
             $uploadFolder = self::getSingle($settings['files.'], 'uploadFolder');
         }
 
@@ -896,14 +898,14 @@ class GeneralUtility implements SingletonInterface
         }
 
         //The settings "search" and "replace" are comma separated lists
-        if ($settings['files.']['search']) {
+        if (isset($settings['files.']['search'])) {
             $search = self::getSingle($settings['files.'], 'search');
             if ($settings['files.']['search.']['separator']) {
                 $separator = self::getSingle($settings['files.']['search.'], 'separator');
             }
             $search = explode($separator, $search);
         }
-        if ($settings['files.']['replace']) {
+        if (isset($settings['files.']['replace'])) {
             $replace = self::getSingle($settings['files.'], 'replace');
             if ($settings['files.']['replace.']['separator']) {
                 $separator = self::getSingle($settings['files.']['replace.'], 'separator');
@@ -930,11 +932,11 @@ class GeneralUtility implements SingletonInterface
                     if ($value instanceof Address) {
                         $value = $value->toString();
                     }
-                    $value = htmlspecialchars($value);
+                    $value = htmlspecialchars((string)$value);
                 }
             }
         } else {
-            $values = htmlspecialchars($values);
+            $values = htmlspecialchars((string)$values);
         }
         return $values;
     }
@@ -1012,7 +1014,13 @@ class GeneralUtility implements SingletonInterface
         $keys = explode('|', $keyString);
         $numberOfLevels = count($keys);
         $rootKey = trim($keys[0]);
-        $value = isset($source) ? $source[$rootKey] : $GLOBALS[$rootKey];
+        if (isset($source) && isset($source[$rootKey])) {
+            $value = $source[$rootKey];
+        } elseif (isset($GLOBALS[$rootKey])) {
+            $value = $GLOBALS[$rootKey];
+        } else {
+            return '';
+        }
 
         for ($i = 1; $i < $numberOfLevels && isset($value); $i++) {
             $currentKey = trim($keys[$i]);
@@ -1036,9 +1044,9 @@ class GeneralUtility implements SingletonInterface
     {
         $wrappedString = $str;
         Globals::getCObj()->setCurrentVal($wrappedString);
-        if (is_array($settingsArray[$key . '.'])) {
+        if (is_array($settingsArray[$key . '.'] ?? null)) {
             $wrappedString = Globals::getCObj()->stdWrap($str, $settingsArray[$key . '.']);
-        } elseif (strlen($settingsArray[$key]) > 0) {
+        } elseif (strlen($settingsArray[$key] ?? '') > 0) {
             $wrappedString = Globals::getCObj()->wrap($str, $settingsArray[$key]);
         }
         return $wrappedString;
@@ -1106,6 +1114,9 @@ class GeneralUtility implements SingletonInterface
 
     public static function parseResourceFiles($settings, $key)
     {
+        if (!isset($settings[$key])) {
+            return null;
+        }
         $resourceFile = $settings[$key];
         $resourceFiles = [];
         if (!self::isValidCObject($resourceFile) && $settings[$key . '.']) {

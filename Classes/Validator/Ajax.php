@@ -100,7 +100,7 @@ class Ajax extends AbstractValidator
                 foreach ($fieldSettings['errorCheck.'] as $key => $check) {
                     if (!strstr($key, '.')) {
                         $errorChecks[$counter]['check'] = $check;
-                        if (is_array($fieldSettings['errorCheck.'][$key . '.'])) {
+                        if (isset($fieldSettings['errorCheck.']) && isset($fieldSettings['errorCheck.'][$key . '.']) && is_array($fieldSettings['errorCheck.'][$key . '.'])) {
                             $errorChecks[$counter]['params'] = $fieldSettings['errorCheck.'][$key . '.'];
                         }
                         $counter++;
@@ -140,9 +140,9 @@ class Ajax extends AbstractValidator
                         $errorCheckObject->init($gp, $check);
                         $errorCheckObject->setFormFieldName($field);
                         if ($errorCheckObject->validateConfig()) {
-                            $checkFailed = $errorCheckObject->check();
+                            $checkFailed = (string)$errorCheckObject->check();
                             if (strlen($checkFailed) > 0) {
-                                if (!is_array($errors[$field])) {
+                                if (!is_array($errors[$field] ?? null)) {
                                     $errors[$field] = [];
                                 }
                                 $errors[$field][] = $checkFailed;

@@ -28,7 +28,7 @@ class PHP extends AbstractSession
     {
         $this->start();
         $data = $_SESSION['formhandler'];
-        if (!is_array($data[$this->globals->getRandomID()])) {
+        if (!isset($data[$this->globals->getRandomID()]) || !is_array($data[$this->globals->getRandomID()])) {
             $data[$this->globals->getRandomID()] = [];
         }
         $data[$this->globals->getRandomID()][$key] = $value;
@@ -60,10 +60,10 @@ class PHP extends AbstractSession
     {
         $this->start();
         $data = $_SESSION['formhandler'];
-        if (!is_array($data[$this->globals->getRandomID()])) {
+        if (!isset($data[$this->globals->getRandomID()]) || !is_array($data[$this->globals->getRandomID()])) {
             $data[$this->globals->getRandomID()] = [];
         }
-        return $data[$this->globals->getRandomID()][$key];
+        return $data[$this->globals->getRandomID()][$key] ?? null;
     }
 
     /* (non-PHPdoc)
@@ -89,10 +89,13 @@ class PHP extends AbstractSession
     {
         parent::init($gp, $settings);
 
-        if (is_array($_SESSION['formhandler'])) {
+        if (!isset($_SESSION)) {
+            session_start();
+        }
+        if (isset($_SESSION['formhandler']) && is_array($_SESSION['formhandler'])) {
             foreach ($_SESSION['formhandler'] as $hashedID => $sesData) {
                 $threshold = $this->getOldSessionThreshold();
-                if (!$this->gp['submitted'] && $this->globals->getFormValuesPrefix() === $sesData['formValuesPrefix'] && $sesData['creationTstamp'] < $threshold) {
+                if (!isset($this->gp['submitted']) && isset($sesData['formValuesPrefix']) && isset($sesData['creationTstamp']) && $this->globals->getFormValuesPrefix() === $sesData['formValuesPrefix'] && $sesData['creationTstamp'] < $threshold) {
                     unset($_SESSION['formhandler'][$hashedID]);
                 }
             }
