@@ -2,6 +2,7 @@
 
 namespace Typoheads\Formhandler\Utility;
 
+use Symfony\Component\Mime\Address;
 use TYPO3\CMS\Core\Context\Context;
 use TYPO3\CMS\Core\Core\Environment;
 use TYPO3\CMS\Core\Crypto\Random;
@@ -10,6 +11,7 @@ use TYPO3\CMS\Core\Utility\ArrayUtility;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\MathUtility;
 use TYPO3\CMS\Core\Utility\PathUtility;
+use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
 /*                                                                        *
  * This script is part of the TYPO3 project - inspiring people to share!  *
@@ -242,12 +244,10 @@ class GeneralUtility implements SingletonInterface
     {
         $message = '';
         if (!is_array($langFiles)) {
-            $message = trim($GLOBALS['TSFE']->sL('LLL:' . $langFiles . ':' . $key));
+            $message = LocalizationUtility::translate('LLL:' . $langFiles . ':' . $key);
         } else {
             foreach ($langFiles as $idx => $langFile) {
-                if (strlen(trim($GLOBALS['TSFE']->sL('LLL:' . $langFile . ':' . $key))) > 0) {
-                    $message = trim($GLOBALS['TSFE']->sL('LLL:' . $langFile . ':' . $key));
-                }
+                $message = LocalizationUtility::translate('LLL:' . $langFile . ':' . $key);
             }
         }
         return $message;
@@ -366,7 +366,7 @@ class GeneralUtility implements SingletonInterface
                 $additionalParamsKeysAndValues = explode('&', $additionalParamsString);
                 $additionalParams = [];
                 foreach ($additionalParamsKeysAndValues as $keyAndValue) {
-                    list($key, $value) = explode('=', $keyAndValue, 2);
+                    [$key, $value] = explode('=', $keyAndValue, 2);
                     $additionalParams[$key] = $value;
                 }
             } else {
@@ -549,7 +549,7 @@ class GeneralUtility implements SingletonInterface
                 $marker = $llKey;
                 $message = '';
                 foreach ($langFiles as $langFile) {
-                    $message = trim($GLOBALS['TSFE']->sL('LLL:' . $langFile . ':' . $llKey));
+                    $message = trim(LocalizationUtility::translate('LLL:' . $langFile . ':' . $llKey));
                 }
                 $langMarkers['###LLL:' . $marker . '###'] = $message;
             }
@@ -927,6 +927,9 @@ class GeneralUtility implements SingletonInterface
                 if (is_array($value)) {
                     $value = self::recursiveHtmlSpecialChars($value);
                 } else {
+                    if ($value instanceof Address) {
+                        $value = $value->toString();
+                    }
                     $value = htmlspecialchars($value);
                 }
             }

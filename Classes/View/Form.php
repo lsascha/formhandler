@@ -6,6 +6,7 @@ use ThinkopenAt\Captcha\Utility;
 use TYPO3\CMS\Core\Information\Typo3Version;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
+use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
 
 /*                                                                        *
  * This script is part of the TYPO3 project - inspiring people to share!  *
@@ -841,8 +842,8 @@ class Form extends AbstractView
                         $onClick .= 'return false;';
 
                         $link = '<a
-								href="javascript:void(0)" 
-								class="formhandler_removelink" 
+								href="javascript:void(0)"
+								class="formhandler_removelink"
 								onclick="' . str_replace(["\n", '	'], '', $onClick) . '"
 								>' . $text . '</a>';
                     }
@@ -1181,7 +1182,7 @@ class Form extends AbstractView
                 $marker = $llKey;
                 $message = '';
                 foreach ($this->langFiles as $subIdx => $langFile) {
-                    $temp = trim($GLOBALS['TSFE']->sL('LLL:' . $langFile . ':' . $llKey));
+                    $temp = trim(LocalizationUtility::translate('LLL:' . $langFile . ':' . $llKey));
                     if (strlen($temp) > 0) {
                         $message = $temp;
                     }
