@@ -683,8 +683,7 @@ class GeneralUtility implements SingletonInterface
         }
         $path = explode('/', $path);
         if (strpos($path[0], 'EXT') === 0) {
-            $parts = explode(':', $path[0]);
-            $path[0] = PathUtility::getAbsoluteWebPath(ExtensionManagementUtility::extPath($parts[1]));
+            return \TYPO3\CMS\Core\Utility\GeneralUtility::getFileAbsFileName(implode('/', $path));
         }
         $path = implode('/', $path);
         $path = str_replace('//', '/', $path);
