@@ -116,6 +116,7 @@ class Dispatcher extends AbstractPlugin
 
             $result = $controller->process();
         } catch (\Exception $e) {
+            throw $e;
             GeneralUtility::makeInstance(LogManager::class)->getLogger(__CLASS__)->error(
                 $e->getFile() . '(' . $e->getLine() . ')' . ' ' . $e->getMessage(),
                 ['formhandler']
