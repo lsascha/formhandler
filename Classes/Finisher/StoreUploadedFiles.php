@@ -42,7 +42,7 @@ class StoreUploadedFiles extends AbstractFinisher
      */
     public function process()
     {
-        if ($this->settings['finishedUploadFolder'] || is_array($this->settings['finishedUploadFolder.'])) {
+        if (isset($this->settings['finishedUploadFolder']) || is_array($this->settings['finishedUploadFolder.'] ?? null)) {
 
             //move the uploaded files
             $this->moveUploadedFiles();
@@ -128,7 +128,7 @@ class StoreUploadedFiles extends AbstractFinisher
      **/
     protected function getNewFolderPath($field)
     {
-        if (is_array($this->settings['finishedUploadFolder.']) && isset($this->settings['finishedUploadFolder.'][$field])) {
+        if (isset($this->settings['finishedUploadFolder.']) && isset($this->settings['finishedUploadFolder.'][$field])) {
             $newFolder = $this->utilityFuncs->getSingle($this->settings['finishedUploadFolder.'], $field);
         } else {
             $newFolder = $this->utilityFuncs->getSingle($this->settings, 'finishedUploadFolder');
