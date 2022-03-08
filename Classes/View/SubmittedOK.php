@@ -39,7 +39,7 @@ class SubmittedOK extends Form
         } else {
             $params = $this->gp;
         }
-        if ($this->componentSettings['actions.']) {
+        if (isset($this->componentSettings['actions.'])) {
             foreach ($this->componentSettings['actions.'] as $action => $options) {
                 $sanitizedAction = str_replace('.', '', $action);
                 $class = $this->utilityFuncs->getPreparedClassName($options);
