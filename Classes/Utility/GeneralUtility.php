@@ -4,14 +4,23 @@ namespace Typoheads\Formhandler\Utility;
 
 use Symfony\Component\Mime\Address;
 use TYPO3\CMS\Core\Context\Context;
+use TYPO3\CMS\Core\Context\TypoScriptAspect;
 use TYPO3\CMS\Core\Core\Environment;
+use TYPO3\CMS\Core\Core\SystemEnvironmentBuilder;
 use TYPO3\CMS\Core\Crypto\Random;
+use TYPO3\CMS\Core\Domain\Repository\PageRepository;
+use TYPO3\CMS\Core\Http\ServerRequestFactory;
+use TYPO3\CMS\Core\Routing\PageArguments;
+use TYPO3\CMS\Core\Routing\SiteMatcher;
 use TYPO3\CMS\Core\SingletonInterface;
+use TYPO3\CMS\Core\Site\SiteFinder;
 use TYPO3\CMS\Core\Utility\ArrayUtility;
 use TYPO3\CMS\Core\Utility\ExtensionManagementUtility;
 use TYPO3\CMS\Core\Utility\MathUtility;
 use TYPO3\CMS\Core\Utility\PathUtility;
 use TYPO3\CMS\Extbase\Utility\LocalizationUtility;
+use TYPO3\CMS\Frontend\Authentication\FrontendUserAuthentication;
+use TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController;
 
 /*                                                                        *
  * This script is part of the TYPO3 project - inspiring people to share!  *
@@ -171,7 +180,12 @@ class GeneralUtility implements SingletonInterface
                     if (!@file_exists($templateFile)) {
                         self::throwException('template_file_not_found', $templateFile);
                     }
-                    $templateCode = \TYPO3\CMS\Core\Utility\GeneralUtility::getURL($templateFile);
+                    $absolutePath = Environment::getPublicPath() . '/' . ltrim($templateFile, '/');
+                    if ($templateFile && file_exists($absolutePath)) {
+                        $templateCode = file_get_contents($absolutePath);
+                    } else {
+                        $templateCode = \TYPO3\CMS\Core\Utility\GeneralUtility::getURL($templateFile);
+                    }
                 } else {
 
                     //The setting "templateFile" was a cObject which returned HTML content. Just use that as template code.
@@ -182,7 +196,12 @@ class GeneralUtility implements SingletonInterface
                 if (!@file_exists($templateFile)) {
                     self::throwException('template_file_not_found', $templateFile);
                 }
-                $templateCode = \TYPO3\CMS\Core\Utility\GeneralUtility::getURL($templateFile);
+                $absolutePath = Environment::getPublicPath() . '/' . ltrim($templateFile, '/');
+                if ($templateFile && file_exists($absolutePath)) {
+                    $templateCode = file_get_contents($absolutePath);
+                } else {
+                    $templateCode = \TYPO3\CMS\Core\Utility\GeneralUtility::getURL($templateFile);
+                }
             }
         } else {
             if (self::isTemplateFilePath($templateFile)) {
@@ -190,7 +209,12 @@ class GeneralUtility implements SingletonInterface
                 if (!@file_exists($templateFile)) {
                     self::throwException('template_file_not_found', $templateFile);
                 }
-                $templateCode = \TYPO3\CMS\Core\Utility\GeneralUtility::getURL($templateFile);
+                $absolutePath = Environment::getPublicPath() . '/' . ltrim($templateFile, '/');
+                if ($templateFile && file_exists($absolutePath)) {
+                    $templateCode = file_get_contents($absolutePath);
+                } else {
+                    $templateCode = \TYPO3\CMS\Core\Utility\GeneralUtility::getURL($templateFile);
+                }
             } else {
                 // given variable $templateFile already contains the template code
                 $templateCode = $templateFile;
@@ -244,10 +268,15 @@ class GeneralUtility implements SingletonInterface
     {
         $message = '';
         if (!is_array($langFiles)) {
-            $message = LocalizationUtility::translate('LLL:' . $langFiles . ':' . $key);
+            $fixLLPath = str_replace('typo3conf/ext/', 'EXT:', trim($langFiles, ' /'));
+            $message = LocalizationUtility::translate('LLL:' . $fixLLPath . ':' . $key);
         } else {
             foreach ($langFiles as $idx => $langFile) {
-                $message = LocalizationUtility::translate('LLL:' . $langFile . ':' . $key);
+                $fixLLPath = str_replace('typo3conf/ext/', 'EXT:', trim($langFile, ' /'));
+                $tmpMessage = trim(LocalizationUtility::translate('LLL:' . $fixLLPath . ':' . $key));
+                if ($tmpMessage !== '') {
+                    $message = $tmpMessage;
+                }
             }
         }
         return $message;
@@ -284,7 +313,7 @@ class GeneralUtility implements SingletonInterface
             $str === 'MULTIMEDIA' || $str === 'OTABLE' || $str === 'QTOBJECT' || $str === 'RECORDS' ||
             $str === 'RESTORE_REGISTER' || $str === 'SEARCHRESULT' || $str === 'SVG' || $str === 'SWFOBJECT' ||
             $str === 'TEMPLATE' || $str === 'TEXT' || $str === 'USER' || $str === 'USER_INT'
-        ;
+            ;
     }
 
     public static function getPreparedClassName($settingsArray, $defaultClassName = '')
@@ -831,20 +860,58 @@ class GeneralUtility implements SingletonInterface
 
     public static function initializeTSFE($pid)
     {
-        // create object instances:
-        $GLOBALS['TSFE'] = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\CMS\Frontend\Controller\TypoScriptFrontendController', $GLOBALS['TYPO3_CONF_VARS'], $pid, 0, true);
-        $GLOBALS['TSFE']->tmpl = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\CMS\Core\TypoScript\TemplateService');
-        $GLOBALS['TSFE']->tmpl->init();
-        $GLOBALS['TSFE']->fe_user->fetchGroupData();
+        if (!isset($GLOBALS['TSFE']) || !($GLOBALS['TSFE'] instanceof TypoScriptFrontendController)) {
 
-        // Get the page
-        $GLOBALS['TSFE']->fetch_the_id();
-        $GLOBALS['TSFE']->getConfigArray();
-        if (is_array($GLOBALS['TSFE']->tmpl->setup['includeLibs.'])) {
-            $GLOBALS['TSFE']->includeLibraries($GLOBALS['TSFE']->tmpl->setup['includeLibs.']);
+            /** @var SiteFinder $siteFinder */
+            $site = null;
+            if ($pid) {
+                /** @var SiteMatcher $siteMatcher */
+                $siteMatcher = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(SiteMatcher::class);
+                $site = $siteMatcher->matchByPageId($pid);
+            }
+            if (null === $site) {
+                /** @var SiteFinder $siteFinder */
+                $siteFinder = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(SiteFinder::class);
+                $allSites = $siteFinder->getAllSites();
+                $site = reset($allSites);
+            }
+            if (!isset($GLOBALS['TYPO3_REQUEST'])) {
+                $request = ServerRequestFactory::fromGlobals();
+                $request = $request
+                    ->withAttribute('site', $site)
+                    ->withAttribute('applicationType', SystemEnvironmentBuilder::REQUESTTYPE_FE);
+                $GLOBALS['TYPO3_REQUEST'] = $request;
+            } else {
+                $request = $GLOBALS['TYPO3_REQUEST'];
+            }
+            /** @var Context $context */
+            $context = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(Context::class);
+            $context->setAspect('typoscript', new TypoScriptAspect(true));
+            $language = $request->getAttribute('language') ?? $site->getDefaultLanguage();
+            $pageArguments = $request->getAttribute('routing') ?? new PageArguments($site->getRootPageId(), 0, [], []);
+            /** @var TypoScriptFrontendController $tsFe */
+            $tsFe = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(
+                TypoScriptFrontendController::class,
+                $context,
+                $site,
+                $language,
+                $pageArguments,
+                \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(FrontendUserAuthentication::class)
+            );
+
+            $tsFe->sys_page = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(PageRepository::class, $context);
+            if ($pid) {
+                $tsFe->id = $pid;
+            } else {
+                $tsFe->id = $site->getRootPageId();
+            }
+            $tsFe->determineId($request);
+            $tsFe->getFromCache($request);
+            $tsFe->getConfigArray();
+            $tsFe->newCObj();
+            $GLOBALS['TSFE'] = $tsFe;
         }
-        $GLOBALS['TSFE']->settingLanguage();
-        $GLOBALS['TSFE']->newCObj();
+        return $GLOBALS['TSFE'];
     }
 
     /**
@@ -958,16 +1025,16 @@ class GeneralUtility implements SingletonInterface
         $qty = substr($value, 0, $value_length - 1);
         $unit = strtolower(substr($value, $value_length - 1));
         switch ($unit) {
-                case 'k':
-                    $qty *= 1024;
-                    break;
-                case 'm':
-                    $qty *= 1048576;
-                    break;
-                case 'g':
-                    $qty *= 1073741824;
-                    break;
-            }
+            case 'k':
+                $qty *= 1024;
+                break;
+            case 'm':
+                $qty *= 1048576;
+                break;
+            case 'g':
+                $qty *= 1073741824;
+                break;
+        }
         return $qty;
     }
 
