@@ -37,21 +37,6 @@ use TYPO3\CMS\Core\Utility\RootlineUtility;
  */
 class TcaUtility
 {
-    public function getParams($PA, $fobj)
-    {
-        $params = unserialize($PA['itemFormElValue']);
-        $output =
-            '<input
-			readonly="readonly" style="display:none"
-			name="' . $PA['itemFormElName'] . '"
-			value="' . htmlspecialchars($PA['itemFormElValue']) . '"
-			onchange="' . htmlspecialchars(implode('', $PA['fieldChangeFunc'])) . '"
-			' . $PA['onFocus'] . '/>
-		';
-        $output .= DebugUtility::viewArray($params);
-        return $output;
-    }
-
     /**
      * Adds onchange listener on the drop down menu "predefined".
      * If the event is fired and old value was ".default", then empty some fields.

@@ -19,14 +19,11 @@ if (!isset($GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['scheduler']['tasks']['TYPO
     ];
 }
 
-$iconRegistry = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(
-    \TYPO3\CMS\Core\Imaging\IconRegistry::class
-);
-$iconRegistry->registerIcon(
-    'formhandler-foldericon',
-    \TYPO3\CMS\Core\Imaging\IconProvider\BitmapIconProvider::class,
-    ['source' => 'EXT:formhandler/Resources/Public/Images/pagetreeicon.png']
-);
+$GLOBALS['TYPO3_CONF_VARS']['SYS']['formEngine']['nodeRegistry'][1647442618] = [
+    'nodeName' => 'formhandlerLogParams',
+    'priority' => 40,
+    'class' => \Typoheads\Formhandler\Form\Element\FormhandlerLogParamsElement::class,
+];
 
 if (!isset($GLOBALS['TYPO3_CONF_VARS']['LOG']['Typoheads']['Formhandler']['writerConfiguration'])) {
     $GLOBALS['TYPO3_CONF_VARS']['LOG']['Typoheads']['Formhandler']['writerConfiguration'] = [

@@ -17,7 +17,7 @@ return [
             'label' => 'LLL:EXT:formhandler/Resources/Private/Language/locallang_db.xlf:tx_formhandler_log.submission_date',
             'config' => [
                 'type' => 'input',
-                'size' => '10',
+                'size' => 16,
                 'eval' => 'datetime',
                 'checkbox' => '0',
                 'default' => '0',
@@ -35,7 +35,7 @@ return [
             'label' => 'LLL:EXT:formhandler/Resources/Private/Language/locallang_db.xlf:tx_formhandler_log.params',
             'config' => [
                 'type' => 'user',
-                'userFunc' => 'Typoheads\Formhandler\Utility\TcaUtility->getParams',
+                'renderType' => 'formhandlerLogParams',
             ],
         ],
         'is_spam' => [
