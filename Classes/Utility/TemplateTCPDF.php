@@ -119,7 +119,8 @@ class TemplateTCPDF extends \TCPDF
             $LANG->includeLLFile($this->sysLangFile);
             $text = trim($LANG->getLL($key));
         } else {
-            $text = trim($GLOBALS['TSFE']->sL('LLL:' . $this->sysLangFile . ':' . $key));
+            $temp = trim(\Typoheads\Formhandler\Utility\GeneralUtility::getTranslatedMessage($this->sysLangFile, $key));
+            //$text = trim($GLOBALS['TSFE']->sL('LLL:' . $this->sysLangFile . ':' . $key));
         }
         return $text;
     }

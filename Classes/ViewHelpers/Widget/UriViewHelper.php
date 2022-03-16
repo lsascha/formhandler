@@ -53,12 +53,13 @@ class UriViewHelper extends \TYPO3\CMS\Fluid\ViewHelpers\Be\UriViewHelper
             ],
         ];
         $queryParameters = array_merge($queryParameters, $additionalParams);
+        $addQueryStringMethod = $arguments['addQueryStringMethod'] ?? 'GET';
         return $uriBuilder->reset()
             ->setArguments($queryParameters)
             ->setSection($arguments['section'])
             ->setUseCacheHash($arguments['useCacheHash'])
             ->setAddQueryString(true)
-            ->setAddQueryStringMethod($arguments['addQueryStringMethod'])
+            ->setAddQueryStringMethod($addQueryStringMethod)
             ->setArgumentsToBeExcludedFromQueryString([$argumentPrefix, 'cHash'])
             ->setFormat($arguments['format'])
             ->build();
