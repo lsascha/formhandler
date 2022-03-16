@@ -3,8 +3,11 @@
 namespace Typoheads\Formhandler\Controller;
 
 use Psr\Http\Message\ResponseInterface;
+use TYPO3\CMS\Core\Messaging\FlashMessage;
+use TYPO3\CMS\Core\Pagination\SimplePagination;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Extbase\Mvc\Controller\ActionController;
+use TYPO3\CMS\Extbase\Pagination\QueryResultPaginator;
 use TYPO3\CMS\Extbase\Property\TypeConverter\PersistentObjectConverter;
 use Typoheads\Formhandler\Component\Manager;
 use Typoheads\Formhandler\Domain\Model\Demand;
@@ -50,7 +53,6 @@ class ModuleController extends ActionController
 
     /**
      * @var LogDataRepository
-     * @TYPO3\CMS\Extbase\Annotation\Inject
      */
     protected $logDataRepository;
 
@@ -106,23 +108,32 @@ class ModuleController extends ActionController
     public function indexAction(Demand $demand = null): ResponseInterface
     {
         if ($demand === null) {
-            $demand = $this->objectManager->get('Typoheads\Formhandler\Domain\Model\Demand');
+            $demand = $this->objectManager->get(\Typoheads\Formhandler\Domain\Model\Demand::class);
             if (!isset($this->gp['demand']['pid'])) {
                 $demand->setPid($this->id);
             }
         }
 
-        //@TODO findDemanded funktioniert nicht, da die Datepicker zunächst gefixt werden müssen
         $logDataRows = $this->logDataRepository->findDemanded($demand);
+        //@TODO findDemanded funktioniert nicht, da die Datepicker zunächst gefixt werden müssen
+        $itemsPerPage = max(5, isset($this->gp['show']) ? (int) $this->gp['show'] : 10);
+        $currentPage = $this->request->hasArgument('currentPage') ? (int)$this->request->getArgument('currentPage') : 1;
+        $paginator = GeneralUtility::makeInstance(QueryResultPaginator::class, $logDataRows, $currentPage, $itemsPerPage);
+        $pagination = new SimplePagination($paginator);
         $this->view->assign('demand', $demand);
         $this->view->assign('logDataRows', $logDataRows);
         $this->view->assign('settings', $this->settings);
-        if (!isset($this->gp['show'])) {
-            $this->gp['show'] = 10;
-        }
-        $this->view->assign('showItems', $this->gp['show']);
         $permissions = [];
-        $this->view->assign('permissions', $permissions);
+        $this->view->assignMultiple(
+            [
+                'showItems' => $itemsPerPage,
+                'itemsPerPage' => $itemsPerPage,
+                'permissions' => $permissions,
+                'paginator' => $paginator,
+                'pagination' => $pagination,
+                'pages' => range(1, $pagination->getLastPageNumber()),
+            ]
+        );
         return $this->htmlResponse();
     }
 
@@ -205,7 +216,7 @@ class ModuleController extends ActionController
      * @param array fields to export
      * @param string export file type (PDF || CSV)
      */
-    public function exportAction($logDataUids = null, array $fields = [], $filetype = ''): ResponseInterface
+    public function exportAction($logDataUids = null, array $fields, $filetype = '')
     {
         if ($logDataUids !== null && !empty($fields)) {
             $logDataRows = $this->logDataRepository->findByUids($logDataUids);
@@ -242,6 +253,8 @@ class ModuleController extends ActionController
                 $generator->process();
             }
         }
-        return $this->htmlResponse();
+        $errorFlashMessage = 'The export field list must not be empty!';
+        $this->addFlashMessage($errorFlashMessage, '', FlashMessage::ERROR);
+        $this->redirect('index');
     }
 }
