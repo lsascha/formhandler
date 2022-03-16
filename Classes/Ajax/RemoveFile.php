@@ -141,7 +141,7 @@ class RemoveFile
         $this->componentManager = GeneralUtility::makeInstance(Manager::class);
         $this->globals = GeneralUtility::makeInstance(Globals::class);
         $this->utilityFuncs = GeneralUtility::makeInstance(\Typoheads\Formhandler\Utility\GeneralUtility::class);
-        $this->utilityFuncs->initializeTSFE($this->id);
+        \Typoheads\Formhandler\Utility\GeneralUtility::initializeTSFE($this->id);
         $this->globals->setCObj($GLOBALS['TSFE']->cObj);
         $randomID = htmlspecialchars(GeneralUtility::_GP('randomID'));
         $this->globals->setRandomID($randomID);
