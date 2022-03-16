@@ -2,6 +2,7 @@
 
 namespace Typoheads\Formhandler\Mailer;
 
+use TYPO3\CMS\Core\Mail\MailMessage;
 use Typoheads\Formhandler\Component\Manager;
 use Typoheads\Formhandler\Controller\Configuration;
 use Typoheads\Formhandler\Utility\GeneralUtility;
@@ -30,7 +31,6 @@ class TYPO3Mailer extends AbstractMailer implements MailerInterface
      */
     protected $emailObj;
 
-
     /**
      * Initializes the email object and calls the parent constructor
      *
@@ -46,7 +46,7 @@ class TYPO3Mailer extends AbstractMailer implements MailerInterface
         GeneralUtility $utilityFuncs
     ) {
         parent::__construct($componentManager, $configuration, $globals, $utilityFuncs);
-        $this->emailObj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\CMS\Core\Mail\MailMessage');
+        $this->emailObj = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(MailMessage::class);
     }
 
     /* (non-PHPdoc)
@@ -72,7 +72,9 @@ class TYPO3Mailer extends AbstractMailer implements MailerInterface
     */
     public function setHTML($html)
     {
-        $this->emailObj->html($html);
+        if (!empty($html)) {
+            $this->emailObj->html($html);
+        }
     }
 
     /* (non-PHPdoc)
@@ -80,7 +82,9 @@ class TYPO3Mailer extends AbstractMailer implements MailerInterface
     */
     public function setPlain($plain)
     {
-        $this->emailObj->text($plain);
+        if (!empty($plain)) {
+            $this->emailObj->text($plain);
+        }
     }
 
     /* (non-PHPdoc)
@@ -88,7 +92,7 @@ class TYPO3Mailer extends AbstractMailer implements MailerInterface
     */
     public function setSubject($value)
     {
-        $this->emailObj->setSubject($value);
+        $this->emailObj->setSubject((string)$value);
     }
 
     /**
@@ -122,7 +126,9 @@ class TYPO3Mailer extends AbstractMailer implements MailerInterface
     */
     public function addCc($email, $name)
     {
-        $this->emailObj->addCc($email, $name);
+        if(!empty($email)) {
+            $this->emailObj->addCc($email, $name);
+        }
     }
 
     /* (non-PHPdoc)
@@ -130,7 +136,9 @@ class TYPO3Mailer extends AbstractMailer implements MailerInterface
     */
     public function addBcc($email, $name)
     {
-        $this->emailObj->addBcc($email, $name);
+        if(!empty($email)) {
+            $this->emailObj->addBcc($email, $name);
+        }
     }
 
     /* (non-PHPdoc)
@@ -138,7 +146,9 @@ class TYPO3Mailer extends AbstractMailer implements MailerInterface
     */
     public function setReturnPath($value)
     {
-        $this->emailObj->setReturnPath($value);
+        if(!empty($value)) {
+            $this->emailObj->setReturnPath($value);
+        }
     }
 
     /* (non-PHPdoc)
@@ -162,7 +172,7 @@ class TYPO3Mailer extends AbstractMailer implements MailerInterface
     */
     public function getHTML()
     {
-        return $this->emailObj->getHtmlBody();
+        return $this->emailObj->getHtmlBody() ?? '';
     }
 
     /* (non-PHPdoc)
@@ -170,7 +180,7 @@ class TYPO3Mailer extends AbstractMailer implements MailerInterface
     */
     public function getPlain()
     {
-        return $this->emailObj->getTextBody();
+        return $this->emailObj->getTextBody() ?? '';
     }
 
     /* (non-PHPdoc)
@@ -196,6 +206,7 @@ class TYPO3Mailer extends AbstractMailer implements MailerInterface
     {
         return $this->emailObj->getReplyTo();
     }
+
     /* (non-PHPdoc)
      * @see Classes/Mailer/Tx_FormhandlerMailerInterface#getCc()
     */
@@ -216,7 +227,6 @@ class TYPO3Mailer extends AbstractMailer implements MailerInterface
     */
     public function getBcc()
     {
-
         $bccArray = $this->emailObj->getBcc();
         $bccConcat = [];
         if (is_array($bccArray)) {
