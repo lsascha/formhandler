@@ -670,16 +670,24 @@ class GeneralUtility implements SingletonInterface
      *
      * @param string The path
      * @return string The resolved path
+     * @throws \TYPO3\CMS\Core\Resource\Exception\FileDoesNotExistException
      */
     public static function resolvePath($path)
     {
-        $path = explode('/', $path);
-        if (strpos($path[0], 'EXT') === 0) {
-            $parts = explode(':', $path[0]);
-            $path[0] = ExtensionManagementUtility::extPath($parts[1]);
+        if (MathUtility::canBeInterpretedAsInteger($path)) {
+            $resourceFactory = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(ResourceFactory::class);
+            /** @var File $file */
+            $file = $resourceFactory->getFileObject($path);
+            $path = $file->getForLocalProcessing(false);
+        } else {
+            $path = explode('/', $path);
+            if (strpos($path[0], 'EXT') === 0) {
+                $parts = explode(':', $path[0]);
+                $path[0] = ExtensionManagementUtility::extPath($parts[1]);
+            }
+            $path = implode('/', $path);
+            $path = str_replace('//', '/', $path);
         }
-        $path = implode('/', $path);
-        $path = str_replace('//', '/', $path);
         return $path;
     }
 
