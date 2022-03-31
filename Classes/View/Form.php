@@ -47,7 +47,10 @@ class Form extends AbstractView
         $this->gp = $gp;
 
         //set template
-        $this->template = $this->subparts['template'] ?? null;
+        $this->template = $this->subparts['template'] ?? null;   
+        if ($this->template === null) {
+            $this->template = $this->globals->getTemplateCode() ?? null;
+        }
         if ($this->template === null) {
             $this->utilityFuncs->throwException('no_template_file');
         }
